@@ -1,0 +1,45 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Jumbotron from 'react-bootstrap/lib/Jumbotron';
+import ButtonToolbar from 'react-bootstrap/lib/ButtonToolbar';
+import Grid from 'react-bootstrap/lib/Grid';
+import Row from 'react-bootstrap/lib/Row';
+import Col from 'react-bootstrap/lib/Col';
+import NavbarInstance from './header.jsx';	
+import Footer from './footer.jsx';	
+import LoginForm from './login.jsx';	
+import CreateAccountForm from './createAccount.jsx';	
+import Profile from './profile.jsx';	
+import './css/bootstrap.min.css';
+import './css/garage.css';
+
+class Index extends React.Component {
+	render() {
+		return (
+			<div>
+				<NavbarInstance />
+				<Jumbotron>
+					<Grid fluid="true">
+						<Row>
+							<Col xs={1} md={1} />
+								<Col xs={10} md={10} >
+									<h1> Welcome </h1>
+									<p> login or sign-up</p>
+									<ButtonToolbar>
+										<LoginForm />
+										<CreateAccountForm  url="/credentials" />
+										<Profile />
+									</ButtonToolbar>
+								</Col>
+							<Col xs={1} md={1} />
+						</Row>
+					</Grid>
+				</Jumbotron>
+				<Footer />
+			</div>
+			);
+	}
+}
+
+ReactDOM.render(<Index />, document.getElementsByClassName('application')[0]);
+
