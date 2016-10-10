@@ -19,7 +19,7 @@ class BlogPage extends React.Component {
 		return (
 			<div>
 				<NavbarInstance />
-				<BlogTemplate.Header title="Getting started with VHDL and FPGA" datestamp="2016-06-01" />
+				<BlogTemplate.Header title="Getting started with VHDL and FPGA" datestamp="2016-01-01" />
 				<BlogTemplate.Caption title="">
 						<p>After recently reading an article on how Microsoft is <a href="http://www.nextplatform.com/2015/08/27/microsoft-extends-fpga-reach-from-bing-to-deep-learning/">extending FPGA usage to Deep Learning applications</a> I decided it was about time I learnt a little bit more about FPGAs. It seems that Microsoft has been researching the use of FPGAs as an alternative to GPUs for machine learning applications and <a href="http://research.microsoft.com/pubs/240715/CNN%20Whitepaper.pdf">released a white paper</a> in February 2015.
 						</p>
