@@ -15,6 +15,7 @@ import Row from 'react-bootstrap/lib/Row';
 import Col from 'react-bootstrap/lib/Col';
 import Pagination from 'react-bootstrap/lib/Pagination';
 import io from 'socket.io-client';
+import CommentWindow from './commentWindow.jsx'
 
 var socket = io.connect('/');
 
@@ -30,9 +31,11 @@ var Comment = React.createClass({
 						<Col xs={8} md={8} >
 							<p>posted {this.props.time}  {this.props.date} </p>
 						</Col>
-						<Col xs={2} md={2}>
-							{this.props.visible ? <Button bsStyle="link" bsSize="small" > Post </Button> : <Button bsStyle="link" bsSize="small" disabled> Post </Button>}							
-							{this.props.visible ? <Button bsStyle="link" bsSize="small" > Reply </Button> : <Button bsStyle="link" bsSize="small" disabled> Reply </Button>}
+						<Col xs={1} md={1}>
+							<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Post" depth={this.props.depth} messageparent={0}/> 	
+						</Col>
+						<Col xs={1} md={1}>			
+							<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Reply" depth={this.props.depth} messageparent={this.props.messageno}/> 	
 						</Col>
 					</Row>
 				</Grid>
@@ -56,60 +59,26 @@ var CommentList = React.createClass({
 	render: function() {
 		var commentNodes = this.props.data.map(function(comment) {
 			return (
-				<Comment author={comment.author}  time={(new Date(comment.timestamp)).toLocaleTimeString()} 
-					date={(new Date(comment.timestamp)).toLocaleDateString()}
-					userimage={comment.userimage} visible={comment.visible}>
-					{comment.text}
-				</Comment>
+
+					<Row>
+						<Col xs={comment.depth} md={comment.depth} />
+						<Col xs={12-comment.depth} md={12-comment.depth} >
+							<Comment author={comment.author}  time={(new Date(comment.timestamp)).toLocaleTimeString()} 
+								date={(new Date(comment.timestamp)).toLocaleDateString()}
+								userimage={comment.userimage} visible={comment.visible} username={comment.username} onCommentSubmit={comment.onCommentSubmit} depth={comment.depth} messageno={comment.messageno}>
+								{comment.text}
+							</Comment>
+						</Col>
+					</Row>
+
 		);
 	});
 	return (
 		<div className="commentList">
-			{commentNodes}
+			<Grid fluid="true">
+				{commentNodes}
+			</Grid>
 		</div>
-		);
-	}
-});
-
-var CommentForm = React.createClass({
-	getInitialState: function() {
-		return {text: ''};
-	},
-	handleTextChange: function(e){
-		this.setState({text: e.target.value});
-	},
-	handleSubmit: function(e){
-		e.preventDefault();
-		var text = this.state.text.trim();
-		var author = this.props.username;
-		if ( !text){
-			return;
-		}
-		this.props.onCommentSubmit({author: author, text: text});
-		this.setState({text:''});
-		location.hash = "#top"
-	},
-	render: function() {
-		return (
-
-			<Navbar  fixedBottom="true"  onClick={this.handleSubmit}>
-			<Navbar.Form inline>			
-				<FormGroup controlId="formInlineName">
-					<ControlLabel>{this.props.username}</ControlLabel>
-					{' '}
-				</FormGroup>
-				{' '}
-				<FormGroup controlId="formInlineComment">
-					<ControlLabel>Comment</ControlLabel>
-					{' '}
-					<FormControl type="text" placeholder="Say something" value={this.state.text} onChange={this.handleTextChange} />
-				</FormGroup>
-				{' '}
-				<Button type="submit" bsStyle="primary" >
-					Post
-				</Button>
-			</Navbar.Form>
-			</Navbar>
 		);
 	}
 });
@@ -190,7 +159,7 @@ var CommentBox = React.createClass({
 		for (var i=start; i<end && i <dataLength; i++)
 		{
 			var m = data[i];
-			$.extend(m, { visible : this.state.visible});
+			$.extend(m, { visible : this.state.visible, username : this.state.author, onCommentSubmit : this.handleCommentSubmit});
 			messages.push(m);
 		}
 		
@@ -202,7 +171,7 @@ var CommentBox = React.createClass({
 
 		var userimage = this.state.userimage;
 		var messageList =this.state.data.reverse();
-		messageList.push({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  messageList.length +1, _id : "r" + toString(messageList.length +1)});
+		messageList.push({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  messageList.length +1, _id : "r" + toString(messageList.length +1), depth : comment.depth});
 		this.refreshComments(messageList.reverse(), messageList.length, this.state.page_index);
 	
 		$.extend(comment, { page : this.props.page});
@@ -239,10 +208,7 @@ var CommentBox = React.createClass({
 			<h2><center><strong>{this.props.title}</strong></center></h2>
 				<br />
 				<CommentList data={this.state.messages} />
-				{ this.state.visible ? <CommentForm onCommentSubmit={this.handleCommentSubmit}  username={this.state.author}/> :  null }
-
-
-
+				<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
 				</Col>
 				<Col xs={1} md={1} />
 			</Row>

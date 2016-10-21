@@ -81,7 +81,7 @@ var CommentForm = React.createClass({
 		if ( !text){
 			return;
 		}
-		this.props.onCommentSubmit({author: author, text: text});
+		this.props.onCommentSubmit({author: author, text: text, depth :  0});
 		this.setState({text:''});
 		location.hash = "#top"
 	},
