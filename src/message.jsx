@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import NavbarInstance from './header.jsx';	
 import Footer from './footer.jsx';	
-import CommentBox from './messageboard.jsx';	
+import CommentBox from './commentboard.jsx';	
 import './css/bootstrap.min.css';
 import './css/garage.css';
 
@@ -18,7 +18,7 @@ class Message extends React.Component {
 		return (
 			<div>
 				<NavbarInstance />
-				<CommentBox page="main" title="Message Board" refreshComment />
+				<CommentBox page="main" title="Message Board"  />
 				<Footer />
 			</div>
 			);

@@ -170,9 +170,22 @@ var CommentBox = React.createClass({
 	{
 
 		var userimage = this.state.userimage;
-		var messageList =this.state.data.reverse();
-		messageList.push({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  messageList.length +1, _id : "r" + toString(messageList.length +1), depth : comment.depth});
-		this.refreshComments(messageList.reverse(), messageList.length, this.state.page_index);
+		var messageList =this.state.data;
+
+		var x = 0;
+		var i =0;
+		for(i=0;i<messageList.length;i++)
+		{
+			if(messageList[i].messageno == comment.messageparent)
+			{
+				x=i+1;
+				break;
+			}
+		}
+
+		messageList.splice.apply(messageList, [x,0].concat({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  messageList.length +1, _id : "r" + toString(messageList.length +1), depth : comment.depth}));
+
+		this.refreshComments(messageList, messageList.length, this.state.page_index);
 	
 		$.extend(comment, { page : this.props.page});
 
