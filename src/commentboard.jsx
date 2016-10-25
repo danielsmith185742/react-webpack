@@ -28,11 +28,8 @@ var Comment = React.createClass({
 						<Col xs={2} md={2}>
 							<b>{this.props.author}</b> 
 						</Col>
-						<Col xs={8} md={8} >
-							<p>posted {this.props.time}  {this.props.date} </p>
-						</Col>
-						<Col xs={1} md={1}>
-							<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Post" depth={this.props.depth} messageparent={0}/> 	
+						<Col xs={9} md={9} >
+							<p> {this.props.depth==0? "posted" : "replied"} {this.props.time}  {this.props.date} </p>
 						</Col>
 						<Col xs={1} md={1}>			
 							<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Reply" depth={this.props.depth} messageparent={this.props.messageno}/> 	
@@ -76,7 +73,13 @@ var CommentList = React.createClass({
 	return (
 		<div className="commentList">
 			<Grid fluid="true">
-				{commentNodes}
+				<Row>
+					<Col xs={1} md={1} />
+					<Col xs={10} md={10} >
+						{commentNodes}
+					</Col>
+					<Col xs={1} md={1} />
+				</Row>
 			</Grid>
 		</div>
 		);
@@ -214,17 +217,37 @@ var CommentBox = React.createClass({
 			<div className="commentBox">
 			<a name="top"></a>
 			<Grid fluid="true">
-			<Row>
-				<Col xs={1} md={1} />
-				<Col xs={10} md={10} >
-				
-			<h2><center><strong>{this.props.title}</strong></center></h2>
-				<br />
+				<Row>
+					<Col xs={1} md={1} />
+					<Col xs={10} md={10} >
+						<h2><center><strong>{this.props.title}</strong></center></h2>
+						<br />
+					</Col>
+					<Col xs={1} md={1} />
+				</Row>
+				<Row>
+					<Col xs={1} md={1} /> 
+					<Col xs={1} md={1}> 
+						<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
+					</Col>
+					<Col xs={1} md={1}> 
+						<Button bsStyle="link" bsSize="small" onClick={this.initComments} > Refresh </Button>	
+					</Col>
+					<Col xs={9} md={9} />
+				</Row>
+				</Grid>
 				<CommentList data={this.state.messages} />
-				<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
-				</Col>
-				<Col xs={1} md={1} />
-			</Row>
+				<Grid fluid="true">
+				<Row>
+					<Col xs={1} md={1} /> 
+					<Col xs={1} md={1}> 
+						<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
+					</Col>
+					<Col xs={1} md={1}> 
+						<Button bsStyle="link" bsSize="small" onClick={this.initComments} > Refresh </Button>	
+					</Col>
+					<Col xs={9} md={9} />
+				</Row>
 			</Grid>
 			<Pagination bsSize="medium" items={this.state.number_page} activePage={this.state.page_index} onSelect=	{this.handlePaginationSelect} />
 
