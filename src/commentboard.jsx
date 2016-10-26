@@ -132,6 +132,24 @@ var CommentBox = React.createClass({
 			}.bind(this)
 		});
 	},
+	reloadComments: function()
+	{
+
+		var filter = {page: this.props.page};
+
+		$.ajax({
+			url: '/messageboard',
+			dataType: 'json',
+			type: 'POST',	
+			data: filter,
+			success: function(data){
+				this.refreshComments(data, data.length, this.state.page_index);
+			}.bind(this),
+			error: function(xhr, status, err) {
+	
+			}.bind(this)
+		});
+	},
 	updateComments: function(data) {
 
 		var currentSize = this.state.comment_size;
@@ -162,7 +180,14 @@ var CommentBox = React.createClass({
 		for (var i=start; i<end && i <dataLength; i++)
 		{
 			var m = data[i];
-			$.extend(m, { visible : this.state.visible, username : this.state.author, onCommentSubmit : this.handleCommentSubmit});
+			var visible =this.state.visible;
+		
+			if (m.messageno.substring(0,3) == "tmp")
+			{
+				visible = false;
+			}
+
+			$.extend(m, { visible : visible, username : this.state.author, onCommentSubmit : this.handleCommentSubmit});
 			messages.push(m);
 		}
 		
@@ -186,7 +211,7 @@ var CommentBox = React.createClass({
 			}
 		}
 
-		messageList.splice.apply(messageList, [x,0].concat({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  messageList.length +1, _id : "r" + toString(messageList.length +1), depth : comment.depth}));
+		messageList.splice.apply(messageList, [x,0].concat({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  "tmp" + (messageList.length +1).toString(), depth : comment.depth}));
 
 		this.refreshComments(messageList, messageList.length, this.state.page_index);
 	
@@ -198,7 +223,7 @@ var CommentBox = React.createClass({
 			type: 'POST',
 			data: comment,
 			success: function(response){
-
+				this.reloadComments();
 			}.bind(this),
 			error: function(xhr, status, err) {
 				console.error("/data", status, err.toString());
@@ -231,7 +256,7 @@ var CommentBox = React.createClass({
 						<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
 					</Col>
 					<Col xs={1} md={1}> 
-						<Button bsStyle="link" bsSize="small" onClick={this.initComments} > Refresh </Button>	
+						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
 					</Col>
 					<Col xs={9} md={9} />
 				</Row>
@@ -244,7 +269,7 @@ var CommentBox = React.createClass({
 						<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
 					</Col>
 					<Col xs={1} md={1}> 
-						<Button bsStyle="link" bsSize="small" onClick={this.initComments} > Refresh </Button>	
+						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
 					</Col>
 					<Col xs={9} md={9} />
 				</Row>

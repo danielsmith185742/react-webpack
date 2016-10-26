@@ -18,7 +18,7 @@ class Message extends React.Component {
 		return (
 			<div>
 				<NavbarInstance />
-				<CommentBox page="main" title="Message Board"  />
+				<CommentBox page="main" title="Message Board"  refreshComment />
 				<Footer />
 			</div>
 			);
