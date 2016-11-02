@@ -22,20 +22,6 @@ var socket = io.connect('/');
 var Comment = React.createClass({
 	render: function() {
 		return (
-				<div>
-				<Grid fluid="true">
-					<Row>
-						<Col xs={2} md={2}>
-							<b>{this.props.author}</b> 
-						</Col>
-						<Col xs={9} md={9} >
-							<p> {this.props.depth==0? "posted" : "replied"} {this.props.time}  {this.props.date} </p>
-						</Col>
-						<Col xs={1} md={1}>			
-							<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Reply" depth={this.props.depth} messageparent={this.props.messageno}/> 	
-						</Col>
-					</Row>
-				</Grid>
 				<Well>
 					<Media>
 						<Media.Left>
@@ -45,44 +31,115 @@ var Comment = React.createClass({
 							<p>{this.props.children}</p>
 						</Media.Body>		
 					</Media>
+					<br />
 				</Well>
-				<br />
-				</div>
 		);
 	}
 });
 
 var CommentList = React.createClass({
-	render: function() {
-		var commentNodes = this.props.data.map(function(comment) {
-			return (
 
+	buildTree: function(data,depth)
+	{
+		var tree = [];
+		var k=0;
+		var i=0;
+		var parent;
+		var localPrevious;
+
+		while (i<data.length)
+		{
+
+			var messageno = data[i].messageno;
+			var parent = data[i].messageparent;
+		
+			if (data[i].depth==depth)
+			{
+				tree[k] = { data : data[i], child : null };
+				localPrevious = tree[k];
+				k=k+1;
+				i=i+1;
+			}
+			else
+			{
+
+				if(localPrevious.data.depth < data[i].depth)
+				{
+					var tmp = data.slice();
+					tmp=tmp.splice(i,data.length);
+					var subTree = this.buildTree(tmp, data[i].depth);
+					localPrevious.child = subTree.branch;
+					i = i + subTree.index;		
+				}					
+				else
+				{
+					return {branch : tree, index : i };
+				}
+
+			}
+			
+		}
+		return {branch : tree, index : i };
+	},
+
+	RenderElement : function(element)
+	{
+		var comment = element.data;
+		var comment_time = (new Date(comment.timestamp)).toLocaleTimeString();
+		var comment_date = (new Date(comment.timestamp)).toLocaleDateString();
+		return (
+
+			<div>
+			<Row>
+				<Col xs={comment.depth} md={comment.depth} />
+				<Col xs={12-comment.depth} md={12-comment.depth} >		
+					<Row>	
+						<Col xs={2} md={2}>
+							<b>{comment.author}</b> 
+						</Col>
+						<Col xs={9} md={9} >
+							<p> {comment.depth==0? "posted" : "replied"} {comment_time}  {comment_date} </p>
+						</Col>
+						<Col xs={1} md={1}>			
+							<CommentWindow username={comment.username} onCommentSubmit={comment.onCommentSubmit} visible={comment.visible} label="Reply" depth={comment.depth} messageparent={comment.messageno}/> 	
+						</Col>
+					</Row>	
 					<Row>
-						<Col xs={comment.depth} md={comment.depth} />
-						<Col xs={12-comment.depth} md={12-comment.depth} >
+						<Panel>	
 							<Comment author={comment.author}  time={(new Date(comment.timestamp)).toLocaleTimeString()} 
 								date={(new Date(comment.timestamp)).toLocaleDateString()}
 								userimage={comment.userimage} visible={comment.visible} username={comment.username} onCommentSubmit={comment.onCommentSubmit} depth={comment.depth} messageno={comment.messageno}>
 								{comment.text}
 							</Comment>
-						</Col>
+							{element.child==null? "" : element.child.map(this.RenderElement) }
+						</Panel>
 					</Row>
+				</Col>
+			</Row>
+			</div>
 
 		);
-	});
-	return (
-		<div className="commentList">
-			<Grid fluid="true">
-				<Row>
-					<Col xs={1} md={1} />
-					<Col xs={10} md={10} >
-						{commentNodes}
-					</Col>
-					<Col xs={1} md={1} />
-				</Row>
-			</Grid>
-		</div>
-		);
+
+	},
+
+	render: function() 
+	{
+			var commentNodes = this.buildTree(this.props.data,0).branch;		
+			var commentTree = commentNodes.map(this.RenderElement);
+			//var commentTree = this.props.data.map(this.RenderElement);			
+			return (
+				<div className="commentList">
+					<Grid fluid="true">
+						<Row>
+							<Col xs={1} md={1} />
+							<Col xs={10} md={10} >
+								{commentTree}
+							</Col>
+							<Col xs={1} md={1} />
+						</Row>
+					</Grid>
+				</div>
+				);
 	}
 });
 
