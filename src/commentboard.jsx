@@ -20,19 +20,52 @@ import CommentWindow from './commentWindow.jsx'
 var socket = io.connect('/');
 
 var Comment = React.createClass({
+	getInitialState: function() {
+		return {collapsed: false};
+	},
 	render: function() {
 		return (
-				<Well>
-					<Media>
-						<Media.Left>
-							<img src={this.props.userimage} alt="Img" height="50"  />	
-						</Media.Left>
-						<Media.Body>
-							<p>{this.props.children}</p>
-						</Media.Body>		
-					</Media>
-					<br />
-				</Well>
+				<div>
+				<Col xs={this.props.depth} md={this.props.depth} />
+				<Col xs={12-this.props.depth} md={12-this.props.depth} >		
+					<Row>	
+						<Col xs={2} md={2}>
+							<b>{this.props.author}</b> 
+						</Col>
+						<Col xs={8} md={8} >
+							<p> {this.props.depth==0? "posted" : "replied"} {this.props.time}  {this.props.date} </p>
+						</Col>
+						<Col xs={2} md={2}>		
+							<Row>	
+							<Col xs={6} md={6}>	
+								<Button bsStyle="link" bsSize="small"onClick={ ()=> this.setState({ collapsed : !this.state.collapsed })}> 
+									{this.state.collapsed ? "expand" : "collapse"} 
+								</Button>
+							</Col>
+							<Col xs={6} md={6}>	
+								<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Reply" depth={this.props.depth} messageparent={this.props.messageno}/>
+							</Col> 
+							</Row>	
+						</Col>
+					</Row>	
+					<Row>
+						<Panel collapsible expanded={!this.state.collapsed}>	
+							<Well>
+								<Media>
+									<Media.Left>
+										<img src={this.props.userimage} alt="Img" height="50"  />	
+									</Media.Left>
+									<Media.Body>
+										<p>{this.props.children}</p>
+									</Media.Body>		
+								</Media>
+								<br />
+							</Well>
+							{this.props.child==null? "" : this.props.child.map(this.props.RenderElement) }
+						</Panel>
+					</Row>
+				</Col>
+				</div>
 		);
 	}
 });
@@ -89,35 +122,12 @@ var CommentList = React.createClass({
 		var comment_date = (new Date(comment.timestamp)).toLocaleDateString();
 		return (
 
-			<div>
 			<Row>
-				<Col xs={comment.depth} md={comment.depth} />
-				<Col xs={12-comment.depth} md={12-comment.depth} >		
-					<Row>	
-						<Col xs={2} md={2}>
-							<b>{comment.author}</b> 
-						</Col>
-						<Col xs={9} md={9} >
-							<p> {comment.depth==0? "posted" : "replied"} {comment_time}  {comment_date} </p>
-						</Col>
-						<Col xs={1} md={1}>			
-							<CommentWindow username={comment.username} onCommentSubmit={comment.onCommentSubmit} visible={comment.visible} label="Reply" depth={comment.depth} messageparent={comment.messageno}/> 	
-						</Col>
-					</Row>	
-					<Row>
-						<Panel>	
-							<Comment author={comment.author}  time={(new Date(comment.timestamp)).toLocaleTimeString()} 
-								date={(new Date(comment.timestamp)).toLocaleDateString()}
-								userimage={comment.userimage} visible={comment.visible} username={comment.username} onCommentSubmit={comment.onCommentSubmit} depth={comment.depth} messageno={comment.messageno}>
+				<Comment author={comment.author}  time={comment_time} date={comment_date}
+								userimage={comment.userimage} visible={comment.visible} username={comment.username} onCommentSubmit={comment.onCommentSubmit} depth={comment.depth} messageno={comment.messageno} child={element.child} RenderElement={this.RenderElement}>
 								{comment.text}
-							</Comment>
-							{element.child==null? "" : element.child.map(this.RenderElement) }
-						</Panel>
-					</Row>
-				</Col>
+				</Comment>
 			</Row>
-			</div>
-
 		);
 
 	},
