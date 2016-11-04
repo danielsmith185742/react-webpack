@@ -43,7 +43,7 @@ var Comment = React.createClass({
 								</Button>
 							</Col>
 							<Col xs={6} md={6}>	
-								<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.visible} label="Reply" depth={this.props.depth} messageparent={this.props.messageno}/>
+								<CommentWindow username={this.props.username} onCommentSubmit={this.props.onCommentSubmit} visible={this.props.depth==3? false : this.props.visible} label="Reply" depth={this.props.depth} messageparent={this.props.messageno}/>
 							</Col> 
 							</Row>	
 						</Col>
