@@ -135,8 +135,7 @@ var CommentList = React.createClass({
 	render: function() 
 	{
 			var commentNodes = this.buildTree(this.props.data,0).branch;		
-			var commentTree = commentNodes.map(this.RenderElement);
-			//var commentTree = this.props.data.map(this.RenderElement);			
+			var commentTree = commentNodes.map(this.RenderElement);		
 			return (
 				<div className="commentList">
 					<Grid fluid="true">
@@ -234,28 +233,45 @@ var CommentBox = React.createClass({
 	refreshComments: function(data, dataLength, pageIndex){
 		
 		var messages = [];
-		var start = (pageIndex-1)*8;
-		var end = start + 8;
-		var commentSize = dataLength;
-		var noPages = Math.floor(commentSize/8);
+		var noMessPage = 8;   //Number of message nodes per page
+		var start = (pageIndex-1)*noMessPage;
+		var end = start + noMessPage;
+		var noNodes=0;
+		var noPages = 0;
+		var j=0;
 
-		if (commentSize%8!=0)
-		{
-			noPages = noPages + 1;
-		}
-
-		for (var i=start; i<end && i <dataLength; i++)
+		for (var i=0;i<dataLength;i++)
 		{
 			var m = data[i];
-			var visible =this.state.visible;
-		
-			if (m.messageno.substring(0,3) == "tmp")
+			var depth = m.depth;
+
+			if ((j>start || (j==start && depth=="0")) && (j<end || (j==end && depth!="0")))
 			{
-				visible = false;
+				
+				var visible = this.state.visible;
+
+				if (m.messageno.substring(0,3) == "tmp")
+				{
+					visible = false;
+				}
+
+				$.extend(m, { visible : visible, username : this.state.author,  onCommentSubmit : this.handleCommentSubmit});
+				messages.push(m);
+
 			}
 
-			$.extend(m, { visible : visible, username : this.state.author, onCommentSubmit : this.handleCommentSubmit});
-			messages.push(m);
+			if(depth=="0")
+			{
+				j=j+1;
+			}
+			
+		}
+		noNodes=j;
+		noPages=Math.floor(noNodes/noMessPage);
+
+		if (noNodes%noMessPage!=0)
+		{
+			noPages = noPages + 1;
 		}
 		
 		this.setState({number_page : noPages, messages: messages, data : data, comment_size : dataLength, page_index : pageIndex});
