@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import NavbarInstance from './header.jsx';	
 import Footer from './footer.jsx';	
 import BlogTemplate from './blogtemplate.jsx';	
-import CommentBox from './messageboard.jsx';	
+import CommentBox from './commentboard.jsx';	
 import './css/bootstrap.min.css';
 import './css/garage.css';
 
