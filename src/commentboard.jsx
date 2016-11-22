@@ -14,14 +14,16 @@ import Grid from 'react-bootstrap/lib/Grid';
 import Row from 'react-bootstrap/lib/Row';
 import Col from 'react-bootstrap/lib/Col';
 import Pagination from 'react-bootstrap/lib/Pagination';
-import io from 'socket.io-client';
 import CommentWindow from './commentWindow.jsx'
 
-var socket = io.connect('/');
+var db = require('./datacache.js');
+var datacache = db.datacache;
 
 var Comment = React.createClass({
-	getInitialState: function() {
-		return {collapsed: false};
+
+	onCollapse: function(){
+		
+		this.props.onCollapse(this.props.messageno);
 	},
 	render: function() {
 		return (
@@ -33,13 +35,13 @@ var Comment = React.createClass({
 							<b>{this.props.author}</b> 
 						</Col>
 						<Col xs={8} md={8} >
-							<p> {this.props.depth==0? "posted" : "replied"} {this.props.time}  {this.props.date} </p>
+							<p> {this.props.depth==0? "Posted" : "Replied"} {this.props.time}  {this.props.date} </p>
 						</Col>
 						<Col xs={2} md={2}>		
 							<Row>	
 							<Col xs={6} md={6}>	
-								<Button bsStyle="link" bsSize="small"onClick={ ()=> this.setState({ collapsed : !this.state.collapsed })}> 
-									{this.state.collapsed ? "expand" : "collapse"} 
+								<Button bsStyle="link" bsSize="small" onClick={this.onCollapse}> 
+									{this.props.collapsed ? "Expand" : "Collapse"} 
 								</Button>
 							</Col>
 							<Col xs={6} md={6}>	
@@ -49,7 +51,7 @@ var Comment = React.createClass({
 						</Col>
 					</Row>	
 					<Row>
-						<Panel collapsible expanded={!this.state.collapsed}>	
+						<Panel collapsible expanded={!this.props.collapsed}>	
 							<Well>
 								<Media>
 									<Media.Left>
@@ -124,7 +126,7 @@ var CommentList = React.createClass({
 
 			<Row>
 				<Comment author={comment.author}  time={comment_time} date={comment_date}
-								userimage={comment.userimage} visible={comment.visible} username={comment.username} onCommentSubmit={comment.onCommentSubmit} depth={comment.depth} messageno={comment.messageno} child={element.child} RenderElement={this.RenderElement}>
+								userimage={comment.userimage} visible={comment.visible} username={comment.username} onCommentSubmit={comment.onCommentSubmit} depth={comment.depth} messageno={comment.messageno} child={element.child} RenderElement={this.RenderElement} onCollapse={comment.onCollapse} collapsed={comment.collapsed}>
 								{comment.text}
 				</Comment>
 			</Row>
@@ -154,30 +156,22 @@ var CommentList = React.createClass({
 
 var CommentBox = React.createClass({
 	getInitialState: function() {
-		return {data: [], messages: [], visible: false, author: "Anonymous", userimage: "user/user.jpg", comment_size : 0, page_index: 1, number_page : 1, verbose : 0 };
+		return {data: [], collapsed: {}, messages: [], visible: false, author: "Anonymous", userimage: "user/user.jpg", comment_size : 0, page_index: 1, number_page : 1, verbose : 0 };
 	},
 	componentDidMount(){
 
-		$.ajax({
-			url: '/sessioninfo',
-			dataType: 'json',
-			cache: false,
-			success: function(data){
+		datacache.sessionInfo(function(data){
 				this.setState({author : data.username, userimage : data.image});
 				this.initComments();
 				if (data.username != "Anonymous")
 				{ 
 					this.setState({visible: true});
 				}
-			}.bind(this),
-			error: function(xhr, status, err) {
-	
-			}.bind(this)
-		});
+			}.bind(this),	function(xhr, status, err) {}.bind(this));
 
 		if (this.props.refreshComment)
 		{
-			socket.on('user', this.updateComments);
+			datacache.autoRefresh(this.updateComments);
 		}
 	},
 	initComments: function()
@@ -185,36 +179,18 @@ var CommentBox = React.createClass({
 
 		var filter = {page: this.props.page};
 
-		$.ajax({
-			url: '/messageboard',
-			dataType: 'json',
-			type: 'POST',	
-			data: filter,
-			success: function(data){
-				this.updateComments(data);
-			}.bind(this),
-			error: function(xhr, status, err) {
-	
-			}.bind(this)
-		});
+		datacache.loadCommentBoard(filter, 
+			function(data){this.updateComments(data);}.bind(this), 
+			function(xhr, status, err) {}.bind(this));
 	},
 	reloadComments: function()
 	{
 
 		var filter = {page: this.props.page};
 
-		$.ajax({
-			url: '/messageboard',
-			dataType: 'json',
-			type: 'POST',	
-			data: filter,
-			success: function(data){
-				this.refreshComments(data, data.length, this.state.page_index);
-			}.bind(this),
-			error: function(xhr, status, err) {
-	
-			}.bind(this)
-		});
+		datacache.loadCommentBoard(filter,  
+			function(data){this.refreshComments(data, data.length, this.state.page_index);}.bind(this),
+			function(xhr, status, err) {;}.bind(this));
 	},
 	updateComments: function(data) {
 
@@ -223,10 +199,6 @@ var CommentBox = React.createClass({
 		if (data.length > currentSize)
 		{
 			this.refreshComments(data, data.length, this.state.page_index);
-		}
-		else
-		{
-			this.setState({data: data, comment_size : data.length});
 		}
 
 	},
@@ -239,6 +211,7 @@ var CommentBox = React.createClass({
 		var noNodes=0;
 		var noPages = 0;
 		var j=0;
+		var isCollapsed;
 
 		for (var i=0;i<dataLength;i++)
 		{
@@ -253,9 +226,24 @@ var CommentBox = React.createClass({
 				if (m.messageno.substring(0,3) == "tmp")
 				{
 					visible = false;
+					isCollapsed = false;
+				}
+				else
+				{
+					if (m.messageno in this.state.collapsed)
+					{
+						isCollapsed = this.state.collapsed[m.messageno];
+					}
+					else
+					{
+						this.state.collapsed[m.messageno]=false;
+						isCollapsed = false;
+					}
 				}
 
-				$.extend(m, { visible : visible, username : this.state.author,  onCommentSubmit : this.handleCommentSubmit});
+
+
+				$.extend(m, { visible : visible, username : this.state.author,  onCommentSubmit : this.handleCommentSubmit, onCollapse : this.collapse, collapsed : isCollapsed});
 				messages.push(m);
 
 			}
@@ -277,6 +265,24 @@ var CommentBox = React.createClass({
 		this.setState({number_page : noPages, messages: messages, data : data, comment_size : dataLength, page_index : pageIndex});
 
 	},
+	collapse : function(messageno)
+	{
+		if (messageno in this.state.collapsed)
+		{
+			var isCollapsed = this.state.collapsed[messageno];
+			this.state.collapsed[messageno] = !isCollapsed;
+			this.refreshComments(this.state.data, this.state.comment_size, this.state.page_index);
+		}
+		
+	},
+	expandAll: function()
+	{
+		for (var key in this.state.collapsed)
+		{
+			this.state.collapsed[key] = false;
+		}
+		this.refreshComments(this.state.data, this.state.comment_size, this.state.page_index);
+	},
 	handleCommentSubmit: function(comment)
 	{
 
@@ -297,24 +303,10 @@ var CommentBox = React.createClass({
 		messageList.splice.apply(messageList, [x,0].concat({author : comment.author, text : comment.text, timestamp: Date.now(), userimage : userimage, page : this.props.page, messageno :  "tmp" + (messageList.length +1).toString(), depth : comment.depth}));
 
 		this.refreshComments(messageList, messageList.length, this.state.page_index);
-	
-		$.extend(comment, { page : this.props.page});
 
-		$.ajax({
-			url: "/data",
-			dataType: 'json',
-			type: 'POST',
-			data: comment,
-			success: function(response){
-				this.reloadComments();
-			}.bind(this),
-			error: function(xhr, status, err) {
-				console.error("/data", status, err.toString());
-			}.bind(this)
-		});
-
-		
-
+		datacache.insertCommentBoard(this.props.page, comment,
+				function(response){this.reloadComments();}.bind(this),
+				function(xhr, status, err) {;}.bind(this));
 	},
 	handlePaginationSelect: function(eventKey)
 	{
@@ -341,7 +333,10 @@ var CommentBox = React.createClass({
 					<Col xs={1} md={1}> 
 						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
 					</Col>
-					<Col xs={9} md={9} />
+					<Col xs={1} md={1}> 
+						<Button bsStyle="link" bsSize="small" onClick={this.expandAll} > Expand All </Button>	
+					</Col>
+					<Col xs={8} md={8} />
 				</Row>
 				</Grid>
 				<CommentList data={this.state.messages} />
