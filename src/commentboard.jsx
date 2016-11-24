@@ -155,33 +155,43 @@ var CommentList = React.createClass({
 });
 
 var CommentBox = React.createClass({
+
+	data : [],
+
+	collapseStatus : {},
+
+	author : "Anonymous",
+
+	userimage : "user/user.jpg",
+
 	getInitialState: function() {
-		return {data: [], collapsed: {}, messages: [], visible: false, author: "Anonymous", userimage: "user/user.jpg", comment_size : 0, page_index: 1, number_page : 1, verbose : 0 };
+	
+		return {messages: [], visible: false, page_index: 1, number_page : 1 };
+
 	},
-	componentDidMount(){
+	componentWillMount : function(){
 
 		datacache.sessionInfo(function(data){
-				this.setState({author : data.username, userimage : data.image});
-				this.initComments();
-				if (data.username != "Anonymous")
-				{ 
-					this.setState({visible: true});
+				this.author = data.username;
+				this.userimage = data.image;	
+				if (this.data.username != "Anonymous")
+				{	 
+					this.state.visible = true;
 				}
 			}.bind(this),	function(xhr, status, err) {}.bind(this));
+	
+		var filter = {page: this.props.page};
+
+		datacache.loadCommentBoard(filter, function(data){
+			this.data=data; 
+			this.refreshComments(this.data, this.data.length,1);				
+		}.bind(this), function(xhr, status, err) {;}.bind(this));
 
 		if (this.props.refreshComment)
 		{
 			datacache.autoRefresh(this.updateComments);
 		}
-	},
-	initComments: function()
-	{
 
-		var filter = {page: this.props.page};
-
-		datacache.loadCommentBoard(filter, 
-			function(data){this.updateComments(data);}.bind(this), 
-			function(xhr, status, err) {}.bind(this));
 	},
 	reloadComments: function()
 	{
@@ -194,10 +204,11 @@ var CommentBox = React.createClass({
 	},
 	updateComments: function(data) {
 
-		var currentSize = this.state.comment_size;
+		var currentSize = this.data.length;
 
 		if (data.length > currentSize)
 		{
+			this.data = data;
 			this.refreshComments(data, data.length, this.state.page_index);
 		}
 
@@ -230,20 +241,20 @@ var CommentBox = React.createClass({
 				}
 				else
 				{
-					if (m.messageno in this.state.collapsed)
+					if (m.messageno in this.collapseStatus)
 					{
-						isCollapsed = this.state.collapsed[m.messageno];
+						isCollapsed = this.collapseStatus[m.messageno];
 					}
 					else
 					{
-						this.state.collapsed[m.messageno]=false;
+						this.collapseStatus[m.messageno]=false;
 						isCollapsed = false;
 					}
 				}
 
 
 
-				$.extend(m, { visible : visible, username : this.state.author,  onCommentSubmit : this.handleCommentSubmit, onCollapse : this.collapse, collapsed : isCollapsed});
+				$.extend(m, { visible : visible, username : this.author,  onCommentSubmit : this.handleCommentSubmit, onCollapse : this.collapse, collapsed : isCollapsed});
 				messages.push(m);
 
 			}
@@ -262,32 +273,32 @@ var CommentBox = React.createClass({
 			noPages = noPages + 1;
 		}
 		
-		this.setState({number_page : noPages, messages: messages, data : data, comment_size : dataLength, page_index : pageIndex});
+		this.setState({number_page : noPages, messages: messages, page_index : pageIndex});
 
 	},
 	collapse : function(messageno)
 	{
-		if (messageno in this.state.collapsed)
+		if (messageno in this.collapseStatus)
 		{
-			var isCollapsed = this.state.collapsed[messageno];
-			this.state.collapsed[messageno] = !isCollapsed;
-			this.refreshComments(this.state.data, this.state.comment_size, this.state.page_index);
+			var isCollapsed = this.collapseStatus[messageno];
+			this.collapseStatus[messageno] = !isCollapsed;
+			this.refreshComments(this.data, this.data.length, this.state.page_index);
 		}
 		
 	},
 	expandAll: function()
 	{
-		for (var key in this.state.collapsed)
+		for (var key in this.collapseStatus)
 		{
-			this.state.collapsed[key] = false;
+			this.collapseStatus[key] = false;
 		}
-		this.refreshComments(this.state.data, this.state.comment_size, this.state.page_index);
+		this.refreshComments(this.data, this.data.length, this.state.page_index);
 	},
 	handleCommentSubmit: function(comment)
 	{
 
-		var userimage = this.state.userimage;
-		var messageList =this.state.data;
+		var userimage = this.userimage;
+		var messageList =this.data;
 
 		var x = 0;
 		var i =0;
@@ -310,9 +321,10 @@ var CommentBox = React.createClass({
 	},
 	handlePaginationSelect: function(eventKey)
 	{
-		this.refreshComments(this.state.data, this.state.comment_size, eventKey);
+		this.refreshComments(this.data, this.data.length, eventKey);
 	},
 	render: function() {
+
 		return (
 			<div className="commentBox">
 			<a name="top"></a>
@@ -328,7 +340,7 @@ var CommentBox = React.createClass({
 				<Row>
 					<Col xs={1} md={1} /> 
 					<Col xs={1} md={1}> 
-						<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
+						<CommentWindow username={this.author} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
 					</Col>
 					<Col xs={1} md={1}> 
 						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
@@ -344,7 +356,7 @@ var CommentBox = React.createClass({
 				<Row>
 					<Col xs={1} md={1} /> 
 					<Col xs={1} md={1}> 
-						<CommentWindow username={this.props.username} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
+						<CommentWindow username={this.author} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
 					</Col>
 					<Col xs={1} md={1}> 
 						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
