@@ -160,6 +160,8 @@ var CommentBox = React.createClass({
 
 	collapseStatus : {},
 
+	renderReady : false,
+
 	author : "Anonymous",
 
 	userimage : "user/user.jpg",
@@ -184,7 +186,9 @@ var CommentBox = React.createClass({
 
 		datacache.loadCommentBoard(filter, function(data){
 			this.data=data; 
-			this.refreshComments(this.data, this.data.length,1);				
+			this.renderReady = true;	
+			this.refreshComments(this.data, this.data.length,1);
+						
 		}.bind(this), function(xhr, status, err) {;}.bind(this));
 
 		if (this.props.refreshComment)
@@ -324,50 +328,57 @@ var CommentBox = React.createClass({
 		this.refreshComments(this.data, this.data.length, eventKey);
 	},
 	render: function() {
-
-		return (
-			<div className="commentBox">
-			<a name="top"></a>
-			<Grid fluid="true">
-				<Row>
-					<Col xs={1} md={1} />
-					<Col xs={10} md={10} >
-						<h2><center><strong>{this.props.title}</strong></center></h2>
-						<br />
-					</Col>
-					<Col xs={1} md={1} />
-				</Row>
-				<Row>
-					<Col xs={1} md={1} /> 
-					<Col xs={1} md={1}> 
-						<CommentWindow username={this.author} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
-					</Col>
-					<Col xs={1} md={1}> 
-						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
-					</Col>
-					<Col xs={1} md={1}> 
-						<Button bsStyle="link" bsSize="small" onClick={this.expandAll} > Expand All </Button>	
-					</Col>
-					<Col xs={8} md={8} />
-				</Row>
-				</Grid>
-				<CommentList data={this.state.messages} />
+	
+		if (!this.renderReady)
+		{
+			return false;
+		}
+		else
+		{
+			return (
+				<div className="commentBox">
+				<a name="top"></a>
 				<Grid fluid="true">
-				<Row>
-					<Col xs={1} md={1} /> 
-					<Col xs={1} md={1}> 
-						<CommentWindow username={this.author} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
-					</Col>
-					<Col xs={1} md={1}> 
-						<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
-					</Col>
-					<Col xs={9} md={9} />
-				</Row>
-			</Grid>
-			<Pagination bsSize="medium" items={this.state.number_page} activePage={this.state.page_index} onSelect=	{this.handlePaginationSelect} />
+					<Row>
+						<Col xs={1} md={1} />
+						<Col xs={10} md={10} >
+							<h2><center><strong>{this.props.title}</strong></center></h2>
+							<br />
+						</Col>
+						<Col xs={1} md={1} />
+					</Row>
+					<Row>
+						<Col xs={1} md={1} /> 
+						<Col xs={1} md={1}> 
+							<CommentWindow username={this.author} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
+						</Col>
+						<Col xs={1} md={1}> 
+							<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
+						</Col>
+						<Col xs={1} md={1}> 
+							<Button bsStyle="link" bsSize="small" onClick={this.expandAll} > Expand All </Button>	
+						</Col>
+						<Col xs={8} md={8} />
+					</Row>
+					</Grid>
+					<CommentList data={this.state.messages} />
+					<Grid fluid="true">
+					<Row>
+						<Col xs={1} md={1} /> 
+						<Col xs={1} md={1}> 
+							<CommentWindow username={this.author} onCommentSubmit={this.handleCommentSubmit} visible={this.state.visible} label="Post" depth={0}/> 
+						</Col>
+						<Col xs={1} md={1}> 
+							<Button bsStyle="link" bsSize="small" onClick={this.reloadComments} > Refresh </Button>	
+						</Col>
+						<Col xs={9} md={9} />
+					</Row>
+				</Grid>
+				<Pagination bsSize="medium" items={this.state.number_page} activePage={this.state.page_index} onSelect=	{this.handlePaginationSelect} />
 
-			</div>
-		);
+				</div>
+			);
+		}
 	}
 });
 
