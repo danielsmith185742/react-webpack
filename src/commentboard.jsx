@@ -21,11 +21,29 @@ var datacache = db.datacache;
 
 var Comment = React.createClass({
 
+	useGlobalCollapseParam : true,
+
+	getInitialState: function() {
+	
+		return { isCollapsed : false };
+
+	},
 	onCollapse: function(){
 		
 		this.props.onCollapse(this.props.messageno);
+		this.state.useGlobalCollapseParam = false;		
+		this.setState({isCollapsed : !this.state.isCollapsed});
+		
 	},
 	render: function() {
+		if (this.state.useGlobalCollapseParam)
+		{
+			this.state.isCollapsed = this.props.collapsed;
+		}
+		else
+		{
+			this.state.useGlobalCollapseParam = true;
+		}
 		return (
 				<div>
 				<Col xs={this.props.depth} md={this.props.depth} />
@@ -41,7 +59,7 @@ var Comment = React.createClass({
 							<Row>	
 							<Col xs={6} md={6}>	
 								<Button bsStyle="link" bsSize="small" onClick={this.onCollapse}> 
-									{this.props.collapsed ? "Expand" : "Collapse"} 
+									{this.state.isCollapsed ? "Expand" : "Collapse"} 
 								</Button>
 							</Col>
 							<Col xs={6} md={6}>	
@@ -51,7 +69,7 @@ var Comment = React.createClass({
 						</Col>
 					</Row>	
 					<Row>
-						<Panel collapsible expanded={!this.props.collapsed}>	
+						<Panel collapsible expanded={!this.state.isCollapsed}>	
 							<Well>
 								<Media>
 									<Media.Left>
@@ -176,7 +194,7 @@ var CommentBox = React.createClass({
 		datacache.sessionInfo(function(data){
 				this.author = data.username;
 				this.userimage = data.image;	
-				if (this.data.username != "Anonymous")
+				if (data.username != "Anonymous")
 				{	 
 					this.state.visible = true;
 				}
@@ -286,7 +304,6 @@ var CommentBox = React.createClass({
 		{
 			var isCollapsed = this.collapseStatus[messageno];
 			this.collapseStatus[messageno] = !isCollapsed;
-			this.refreshComments(this.data, this.data.length, this.state.page_index);
 		}
 		
 	},
