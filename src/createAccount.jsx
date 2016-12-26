@@ -1,4 +1,5 @@
 import React from 'react';
+import Crypto from 'crypto';
 import FormGroup from 'react-bootstrap/lib/FormGroup';
 import FormControl from 'react-bootstrap/lib/FormControl';
 import ControlLabel from 'react-bootstrap/lib/ControlLabel';
@@ -180,11 +181,13 @@ var CreateAccountForm = React.createClass({
 		this.setState( {submitDisable : true} );
 		this.setState( {cancelDisable : true} );
 
+		var passwordHash = Crypto.createHash('md5').update(password).digest('hex');
+
 		$.ajax({
 			url: "/credentials",
 			dataType: 'json',
 			type: 'POST',
-			data: {username: username, email: email, password: password},
+			data: {username: username, email: email, password: passwordHash},
 			success: function(response){
 
 				this.props.onUpdate();

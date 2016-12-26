@@ -1,4 +1,5 @@
 import React from 'react';
+import Crypto from 'crypto';
 import Grid from 'react-bootstrap/lib/Grid';
 import Row from 'react-bootstrap/lib/Row';
 import Col from 'react-bootstrap/lib/Col';
@@ -241,8 +242,10 @@ var Profile = React.createClass({
 	},	
 	handlePasswordSave: function(e)
 	{
-		
-		var password =  { password : this.state.password, newPassword : this.state.tmpPassword};
+		var oldPasswordHash = Crypto.createHash('md5').update(this.state.password).digest('hex');
+		var newPasswordHash = Crypto.createHash('md5').update( this.state.tmpPassword).digest('hex');
+
+		var password =  { password : oldPasswordHash, newPassword : newPasswordHash};
 
 		this.setState({savePasswordStatus : true}); //should also temporarily disable the cancel button
 		this.props.onUpdate();
